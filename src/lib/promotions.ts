@@ -15,6 +15,7 @@ type PromotionRow = {
   isActive: boolean;
   startsAt: Date | null;
   endsAt: Date | null;
+  allowedPaymentMethods: string[];
 };
 
 export function toPromotion(row: PromotionRow): Promotion {
@@ -29,6 +30,7 @@ export function toPromotion(row: PromotionRow): Promotion {
     isActive: row.isActive,
     startsAt: row.startsAt,
     endsAt: row.endsAt,
+    allowedPaymentMethods: row.allowedPaymentMethods ?? [],
   };
 }
 

@@ -1,6 +1,14 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { computeOrderPricing, describePromotion, findNextPromotion, promotionDiscount, type Promotion } from "./pricing";
+import {
+  computeOrderPricing,
+  describePromotion,
+  findNextPromotion,
+  findOfferBlockedByPayment,
+  paymentRestrictionText,
+  promotionDiscount,
+  type Promotion,
+} from "./pricing";
 
 const NOW = new Date("2026-10-01T12:00:00Z");
 
@@ -16,6 +24,7 @@ function promo(id: string, overrides: Partial<Promotion> = {}): Promotion {
     isActive: true,
     startsAt: null,
     endsAt: null,
+    allowedPaymentMethods: [],
     ...overrides,
   };
 }
@@ -165,5 +174,72 @@ describe("findNextPromotion", () => {
 
   it("returns null when every offer is already reached", () => {
     assert.equal(findNextPromotion(promotions, 3000, NOW), null);
+  });
+});
+
+describe("payment-method restricted offers", () => {
+  const online = ["BKASH", "NAGAD", "ROCKET"];
+  const puja = promo("puja", { name: "Puja Cashback Offer", type: "FIXED", value: 300, minOrderAmount: 2000, allowedPaymentMethods: online });
+
+  it("removes the discount when the customer pays cash on delivery", () => {
+    const result = computeOrderPricing({ ...base, promotions: [puja], subtotal: 2500, paymentMethod: "COD" });
+    assert.equal(result.applied, null);
+    assert.equal(result.discount, 0);
+  });
+
+  it("applies the discount for an allowed online method", () => {
+    const result = computeOrderPricing({ ...base, promotions: [puja], subtotal: 2500, paymentMethod: "BKASH" });
+    assert.equal(result.discount, 300);
+    assert.equal(result.applied?.kind, "promotion");
+  });
+
+  it("applies offers with no restriction to every method, including cash on delivery", () => {
+    const open = promo("open", { type: "FIXED", value: 100, allowedPaymentMethods: [] });
+    assert.equal(computeOrderPricing({ ...base, promotions: [open], subtotal: 2500, paymentMethod: "COD" }).discount, 100);
+  });
+
+  it("previews the offer when the payment method is not chosen yet (cart)", () => {
+    assert.equal(computeOrderPricing({ ...base, promotions: [puja], subtotal: 2500 }).discount, 300);
+  });
+
+  it("falls back to an unrestricted offer when the better one needs online payment", () => {
+    const open = promo("open", { type: "FIXED", value: 100, allowedPaymentMethods: [] });
+    const result = computeOrderPricing({ ...base, promotions: [puja, open], subtotal: 2500, paymentMethod: "COD" });
+    assert.equal(result.applied?.kind === "promotion" && result.applied.promotionId, "open");
+    assert.equal(result.discount, 100);
+  });
+});
+
+describe("findOfferBlockedByPayment", () => {
+  const online = ["BKASH", "NAGAD", "ROCKET"];
+  const puja = promo("puja", { name: "Puja Cashback Offer", type: "FIXED", value: 300, minOrderAmount: 2000, allowedPaymentMethods: online });
+  const input = { ...base, promotions: [puja], subtotal: 2500, paymentMethod: "COD" };
+
+  it("tells cash-on-delivery customers which methods unlock the offer and how much they save", () => {
+    const blocked = findOfferBlockedByPayment(input);
+    assert.ok(blocked);
+    assert.equal(blocked.promotion.id, "puja");
+    assert.deepEqual(blocked.paymentMethods, online);
+    assert.equal(blocked.extraSaving, 300);
+  });
+
+  it("returns nothing when the chosen method already gets the offer", () => {
+    assert.equal(findOfferBlockedByPayment({ ...input, paymentMethod: "NAGAD" }), null);
+  });
+
+  it("returns nothing below the offer minimum", () => {
+    assert.equal(findOfferBlockedByPayment({ ...input, subtotal: 1500 }), null);
+  });
+
+  it("returns nothing when the customer's coupon already beats the offer", () => {
+    assert.equal(findOfferBlockedByPayment({ ...input, coupon: { couponId: "c", code: "BIG", discount: 500 } }), null);
+  });
+});
+
+describe("paymentRestrictionText", () => {
+  it("describes online-only and single-method offers", () => {
+    assert.equal(paymentRestrictionText(["BKASH", "NAGAD", "ROCKET"]), "bKash, Nagad or Rocket");
+    assert.equal(paymentRestrictionText(["BKASH"]), "bKash");
+    assert.equal(paymentRestrictionText([]), "");
   });
 });

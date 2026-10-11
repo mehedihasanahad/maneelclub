@@ -18,6 +18,11 @@ export const promotionSchema = z
     isActive: z.boolean().default(true),
     startsAt: optionalDate,
     endsAt: optionalDate,
+    // Empty = every payment method. e.g. ["BKASH","NAGAD","ROCKET"] = not Cash on Delivery.
+    allowedPaymentMethods: z
+      .array(z.enum(["COD", "BKASH", "NAGAD", "ROCKET"]))
+      .default([])
+      .transform((methods) => [...new Set(methods)]),
   })
   .refine((d) => d.type !== "PERCENT" || d.value <= 100, {
     message: "Percentage must be between 0 and 100",

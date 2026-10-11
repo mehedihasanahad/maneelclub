@@ -28,6 +28,8 @@ import {
   computeOrderPricing,
   describePromotion,
   findNextPromotion,
+  findOfferBlockedByPayment,
+  paymentRestrictionText,
   type Promotion,
 } from "@/lib/pricing";
 import { checkoutSchema, CheckoutFormData } from "@/schemas/checkout";
@@ -147,17 +149,22 @@ export default function CheckoutClient({
   });
 
   const shippingZone = form.watch("shippingZone");
+  const paymentMethod = form.watch("paymentMethod") || "COD";
   const subtotal = getSubtotal();
   const zoneRate = shippingZone === "inside_dhaka" ? shippingRates.dhaka : shippingRates.outside;
   // Same pricing function the server uses when creating the order.
-  const pricing = computeOrderPricing({
+  const pricingInput = {
     subtotal,
     zoneRate,
     freeShippingMinimum,
     coupon: appliedCoupon,
     promotions,
     now: pricingNow,
-  });
+    paymentMethod,
+  };
+  const pricing = computeOrderPricing(pricingInput);
+  // An offer the customer misses because of the payment method they picked (e.g. Cash on Delivery).
+  const blockedOffer = findOfferBlockedByPayment(pricingInput);
   const { shippingCost, discount, total } = pricing;
   const appliedOffer = pricing.applied?.kind === "promotion" ? pricing.applied : null;
   const appliedOfferDetails = appliedOffer ? promotions.find((p) => p.id === appliedOffer.promotionId) : null;
@@ -572,6 +579,18 @@ export default function CheckoutClient({
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {blockedOffer && (
+                  <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-900 dark:text-amber-200">
+                    <Gift className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      Pay with {paymentRestrictionText(blockedOffer.paymentMethods)} to get{" "}
+                      <span className="font-medium">
+                        {describePromotion(blockedOffer.promotion, formatPrice)}
+                      </span>{" "}
+                      ({blockedOffer.promotion.name}).
+                    </span>
+                  </div>
+                )}
                 <PaymentMethodSelector
                   form={form}
                   totalAmount={total}
@@ -682,12 +701,20 @@ export default function CheckoutClient({
                     </span>
                   </div>
                 )}
+                {blockedOffer && (
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    {blockedOffer.promotion.name}: {describePromotion(blockedOffer.promotion, formatPrice)} if you
+                    pay with {paymentRestrictionText(blockedOffer.paymentMethods)}.
+                  </p>
+                )}
                 {nextOffer && (
                   <p className="text-sm text-muted-foreground">
                     Add {formatPrice(nextOffer.amountNeeded)} more to get{" "}
                     <span className="font-medium text-foreground">
                       {describePromotion(nextOffer.promotion, formatPrice)}
                     </span>
+                    {nextOffer.promotion.allowedPaymentMethods.length > 0 &&
+                      ` with ${paymentRestrictionText(nextOffer.promotion.allowedPaymentMethods)} payment`}
                     .
                   </p>
                 )}

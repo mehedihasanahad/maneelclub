@@ -337,6 +337,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       coupon: validatedCoupon,
       promotions: await getActivePromotions(),
       now: new Date(),
+      // Offers limited to certain payment methods only apply when the chosen method is allowed.
+      paymentMethod: formData.paymentMethod || "COD",
     });
     const { shippingCost, total } = pricing;
     const discountAmount = pricing.discount;

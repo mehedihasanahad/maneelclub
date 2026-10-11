@@ -421,6 +421,8 @@ model Promotion {
   isActive       Boolean    @default(true)
   startsAt       DateTime?
   endsAt         DateTime?
+  // Payment methods the offer is valid for; empty = every method (e.g. [BKASH, NAGAD, ROCKET] = not COD)
+  allowedPaymentMethods PaymentMethod[] @default([])
   usedCount      Int        @default(0)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

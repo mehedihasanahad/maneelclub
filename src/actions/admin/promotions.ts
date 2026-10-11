@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { promotionSchema, type PromotionInput } from "@/schemas/promotion";
+import { ALL_PAYMENT_METHODS } from "@/lib/pricing";
 
 async function checkAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -42,6 +43,8 @@ export type AdminPromotion = {
   isActive: boolean;
   startsAt: string | null;
   endsAt: string | null;
+  /** Empty = every payment method. */
+  allowedPaymentMethods: string[];
   usedCount: number;
 };
 
@@ -62,6 +65,7 @@ export async function getAdminPromotions(): Promise<Result<AdminPromotion[]>> {
         isActive: p.isActive,
         startsAt: p.startsAt?.toISOString() ?? null,
         endsAt: p.endsAt?.toISOString() ?? null,
+        allowedPaymentMethods: p.allowedPaymentMethods,
         usedCount: p.usedCount,
       })),
     };
@@ -76,6 +80,8 @@ function toData(input: PromotionInput) {
     ...d,
     // A cap only makes sense for percentage offers.
     maxDiscount: d.type === "PERCENT" ? (d.maxDiscount ?? null) : null,
+    // Every method ticked means "no restriction": store it as the empty list.
+    allowedPaymentMethods: d.allowedPaymentMethods.length >= ALL_PAYMENT_METHODS.length ? [] : d.allowedPaymentMethods,
   };
 }
 

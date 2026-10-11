@@ -14,6 +14,7 @@ import {
   computeOrderPricing,
   describePromotion,
   findNextPromotion,
+  paymentRestrictionText,
   type Promotion,
 } from "@/lib/pricing";
 
@@ -49,6 +50,10 @@ export default function CartClient({ freeShippingMinimum, promotions }: CartClie
     now: pricingNow,
   });
   const offer = pricing.applied?.kind === "promotion" ? pricing.applied : null;
+  // Payment is chosen at checkout, so an offer limited to some methods is previewed here with a note.
+  const offerPaymentMethods = offer
+    ? (promotions.find((p) => p.id === offer.promotionId)?.allowedPaymentMethods ?? [])
+    : [];
   const nextOffer = findNextPromotion(promotions, subtotal, pricingNow);
   const qualifiesForFreeShipping =
     (freeShippingEnabled && subtotal >= freeShippingMinimum) || Boolean(offer?.freeShipping);
@@ -254,7 +259,11 @@ export default function CartClient({ freeShippingMinimum, promotions }: CartClie
                 {offer && (
                   <p className="flex items-start gap-2 rounded bg-green-50 p-2 text-xs text-green-800 dark:bg-green-950/30 dark:text-green-200">
                     <Gift className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {offer.name} unlocked. No code needed.
+                    <span>
+                      {offer.name} unlocked. No code needed.
+                      {offerPaymentMethods.length > 0 &&
+                        ` Applies when you pay with ${paymentRestrictionText(offerPaymentMethods)}.`}
+                    </span>
                   </p>
                 )}
 
@@ -264,6 +273,8 @@ export default function CartClient({ freeShippingMinimum, promotions }: CartClie
                     <span className="font-medium text-foreground">
                       {describePromotion(nextOffer.promotion, formatPrice)}
                     </span>
+                    {nextOffer.promotion.allowedPaymentMethods.length > 0 &&
+                      ` with ${paymentRestrictionText(nextOffer.promotion.allowedPaymentMethods)} payment`}
                     .
                   </p>
                 ) : (

@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { PromotionInput } from "@/schemas/promotion";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -36,7 +38,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/format";
-import { describePromotion } from "@/lib/pricing";
+import {
+  ALL_PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
+  describePromotion,
+  paymentRestrictionText,
+} from "@/lib/pricing";
 import {
   createPromotion,
   deletePromotion,
@@ -56,7 +63,11 @@ type FormState = {
   isActive: boolean;
   startsAt: string; // datetime-local value in the admin's time zone
   endsAt: string;
+  /** Ticked payment methods. All ticked = no restriction. */
+  paymentMethods: string[];
 };
+
+const ONLINE_PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter((m) => m !== "COD");
 
 const EMPTY_FORM: FormState = {
   name: "",
@@ -68,6 +79,7 @@ const EMPTY_FORM: FormState = {
   isActive: true,
   startsAt: "",
   endsAt: "",
+  paymentMethods: ALL_PAYMENT_METHODS,
 };
 
 /** ISO string -> value for <input type="datetime-local"> in the browser's time zone. */
@@ -135,12 +147,17 @@ export default function AdminOffersPage() {
       isActive: p.isActive,
       startsAt: toLocalInput(p.startsAt),
       endsAt: toLocalInput(p.endsAt),
+      paymentMethods: p.allowedPaymentMethods.length > 0 ? p.allowedPaymentMethods : ALL_PAYMENT_METHODS,
     });
     setEditingId(p.id);
   }
 
   async function save() {
     if (!editingId) return;
+    if (form.paymentMethods.length === 0) {
+      toast.error("Tick at least one payment method");
+      return;
+    }
     setSaving(true);
     const input = {
       name: form.name,
@@ -152,6 +169,11 @@ export default function AdminOffersPage() {
       isActive: form.isActive,
       startsAt: fromLocalInput(form.startsAt),
       endsAt: fromLocalInput(form.endsAt),
+      // Every method ticked is stored as "no restriction".
+      allowedPaymentMethods:
+        form.paymentMethods.length === ALL_PAYMENT_METHODS.length
+          ? []
+          : (form.paymentMethods as PromotionInput["allowedPaymentMethods"]),
     };
     const res = editingId === "new" ? await createPromotion(input) : await updatePromotion(editingId, input);
     setSaving(false);
@@ -280,6 +302,11 @@ export default function AdminOffersPage() {
                     ) : (
                       <p>No date limits</p>
                     )}
+                    <p>
+                      {p.allowedPaymentMethods.length > 0
+                        ? `Only with ${paymentRestrictionText(p.allowedPaymentMethods)}`
+                        : "All payment methods"}
+                    </p>
                     <p>Used on {p.usedCount} order{p.usedCount === 1 ? "" : "s"}</p>
                   </div>
 
@@ -392,6 +419,54 @@ export default function AdminOffersPage() {
               <Switch checked={form.freeShipping} onCheckedChange={(v) => setForm({ ...form, freeShipping: v })} />
             </label>
 
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <span>
+                  <span className="block text-sm font-medium">Allowed payment methods</span>
+                  <span className="block text-xs text-muted-foreground">
+                    The offer only applies when the customer pays with a ticked method.
+                  </span>
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setForm({ ...form, paymentMethods: ONLINE_PAYMENT_METHODS })}
+                  >
+                    Not with Cash on Delivery
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setForm({ ...form, paymentMethods: ALL_PAYMENT_METHODS })}
+                  >
+                    All
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_PAYMENT_METHODS.map((method) => (
+                  <label key={method} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form.paymentMethods.includes(method)}
+                      onCheckedChange={(checked) =>
+                        setForm({
+                          ...form,
+                          // Keep checkout order regardless of click order.
+                          paymentMethods: ALL_PAYMENT_METHODS.filter((m) =>
+                            m === method ? checked === true : form.paymentMethods.includes(m)
+                          ),
+                        })
+                      }
+                    />
+                    {PAYMENT_METHOD_LABELS[method]}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="offer-start">Starts (optional)</Label>
@@ -422,7 +497,11 @@ export default function AdminOffersPage() {
               <span className="text-muted-foreground">Customers will see: </span>
               <span className="font-medium">
                 {preview
-                  ? `Spend ${formatPrice(Number(form.minOrderAmount) || 0)}, get ${preview}`
+                  ? `Spend ${formatPrice(Number(form.minOrderAmount) || 0)}, get ${preview}${
+                      form.paymentMethods.length > 0 && form.paymentMethods.length < ALL_PAYMENT_METHODS.length
+                        ? ` (with ${paymentRestrictionText(form.paymentMethods)} payment)`
+                        : ""
+                    }`
                   : "Set a discount or turn on free delivery"}
               </span>
             </div>
