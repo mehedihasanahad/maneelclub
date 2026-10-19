@@ -21,7 +21,7 @@ export const siteConfig = {
 
   // Development company (surfaced in SEO/AEO metadata + structured data)
   developer: {
-    name: "Arrowbin LLC",
+    name: "Arrowbin",
     url: "https://arrowbin.com",
   },
 } as const;

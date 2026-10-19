@@ -201,7 +201,7 @@ export function Footer({ settings }: FooterProps) {
                     rel="noopener noreferrer"
                     className="font-medium text-foreground hover:text-primary transition-colors"
                   >
-                    Arrowbin LLC
+                    Arrowbin
                   </a>
                 </div>
               </div>
