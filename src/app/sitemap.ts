@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/shop`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/reviews`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/faq`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
   ];
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, posts] = await Promise.all([
     db.product.findMany({
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
@@ -32,6 +33,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
     }),
+    // Drafts are excluded: they are not reachable on the site.
+    //
+    // Guarded because Post is a newer table: if a deploy ever builds before
+    // `prisma migrate deploy` has run, the table is missing and an unguarded
+    // query here would fail the whole build. Degrading to "no blog URLs" is
+    // strictly better than no sitemap at all.
+    db.post
+      .findMany({
+        where: { status: "PUBLISHED", publishedAt: { not: null } },
+        select: { slug: true, updatedAt: true },
+      })
+      .catch((error: unknown) => {
+        console.error("Sitemap: could not read posts", error);
+        return [] as Array<{ slug: string; updatedAt: Date }>;
+      }),
   ]);
 
   const productUrls: MetadataRoute.Sitemap = products.map((p) => ({
@@ -48,5 +64,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...productUrls, ...categoryUrls];
+  const postUrls: MetadataRoute.Sitemap = posts.map((p) => ({
+    url: `${baseUrl}/blog/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...productUrls, ...categoryUrls, ...postUrls];
 }

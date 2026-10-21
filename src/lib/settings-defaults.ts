@@ -16,6 +16,7 @@ export const DEFAULT_HEADER_MENU: LinkItem[] = [
   { name: "New Arrivals", href: "/product-category/new-arrivals" },
   { name: "Winter Collection", href: "/product-category/winter-collection" },
   { name: "Hoodie", href: "/product-category/hoodie" },
+  { name: "Blog", href: "/blog" },
 ];
 
 export const DEFAULT_FOOTER_COLUMNS: FooterColumn[] = [

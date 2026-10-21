@@ -72,7 +72,10 @@ describe("parseFooterColumns", () => {
 describe("DEFAULT_SETTINGS footer and header defaults", () => {
   it("stores the header menu as JSON that round-trips to DEFAULT_HEADER_MENU", () => {
     assert.deepEqual(parseLinkList(DEFAULT_SETTINGS.headerMenu, []), DEFAULT_HEADER_MENU);
-    assert.equal(DEFAULT_HEADER_MENU.length, 5);
+    assert.equal(DEFAULT_HEADER_MENU.length, 6);
+    // The blog lives in the default menu; existing sites keep whatever menu
+    // they have saved, so it is added there from Settings > Navigation.
+    assert.ok(DEFAULT_HEADER_MENU.some((l) => l.href === "/blog"));
   });
 
   it("stores footer columns as JSON matching today's Shop and Support columns", () => {

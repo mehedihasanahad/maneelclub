@@ -19,6 +19,7 @@ import {
   Ticket,
   FileText,
   MessageSquareQuote,
+  Newspaper,
   Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const sidebarLinks: SidebarLinkItem[] = [
   { name: "Attributes", href: "/admin/attributes", icon: Palette },
   { name: "Customers", href: "/admin/customers", icon: Users },
   { name: "Reviews", href: "/admin/reviews", icon: MessageSquareQuote },
+  { name: "Blog", href: "/admin/blog", icon: Newspaper },
   { name: "Coupons", href: "/admin/coupons", icon: Ticket },
   { name: "Offers", href: "/admin/offers", icon: Gift },
   { name: "IP Bans", href: "/admin/ip-bans", icon: ShieldAlert },

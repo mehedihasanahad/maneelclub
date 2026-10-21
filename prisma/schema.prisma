@@ -464,6 +464,40 @@ enum CouponType {
   FIXED
 }
 
+// ==================== BLOG ====================
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Post {
+  id        String     @id @default(cuid())
+  title     String
+  slug      String     @unique
+  /** Short summary for the blog list and social previews. */
+  excerpt   String?
+  /** Markdown. Rendered server-side; raw HTML is escaped before parsing. */
+  content   String     @db.Text
+  coverImage String?
+  /** Free text rather than a User relation, so a post survives staff changes. */
+  authorName String?
+  status    PostStatus @default(DRAFT)
+  /** Set the first time a post is published; drives ordering and datePublished. */
+  publishedAt DateTime?
+
+  // ---- SEO (optional; falls back to title/excerpt) ----
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status, publishedAt])
+}
+
 // ==================== USER DATA ====================
 
 model Address {
