@@ -145,6 +145,12 @@ model Product {
   isFeatured     Boolean     @default(false)
   isActive       Boolean     @default(true)
   sizeChart      Json?
+
+  // ---- SEO (all optional; the storefront falls back to title/description) ----
+  metaTitle       String? // <title> override, ~60 chars
+  metaDescription String? // meta description override, ~160 chars
+  canonicalUrl    String? // absolute URL, only for intentional duplicates
+
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -267,6 +273,12 @@ model Category {
   slug      String   @unique
   description String?
   image     String?
+
+  // ---- SEO (all optional; falls back to name/description) ----
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+
   parentId  String?
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
@@ -489,6 +501,12 @@ model Review {
   height       Int
   caption      String       @default("") // not shown; alt text for screen readers and SEO
   customerName String       @default("")
+  /**
+   * Star rating 1-5 transcribed from the customer's message by an admin.
+   * Nullable: existing screenshots have no rating, and a product only gets
+   * AggregateRating markup once real ratings exist.
+   */
+  rating       Int?
   source       ReviewSource @default(MESSENGER)
   isFeatured   Boolean      @default(false) // home page + product-tab fallback
   isActive     Boolean      @default(true)

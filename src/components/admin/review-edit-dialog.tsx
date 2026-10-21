@@ -29,6 +29,8 @@ import { REVIEW_SOURCES, SOURCE_META, type ReviewSource } from "@/lib/reviews-sh
 export interface ReviewEditValues {
   customerName: string;
   caption: string;
+  /** 1-5 as the customer gave it, or null when they did not rate. */
+  rating: number | null;
   source: ReviewSource;
   products: Array<{ id: string; title: string }>;
 }
@@ -81,6 +83,7 @@ function ReviewEditForm({
   const [values, setValues] = useState<ReviewEditValues>({
     customerName: review.customerName,
     caption: review.caption,
+    rating: review.rating,
     source: review.source,
     products: review.products,
   });
@@ -131,6 +134,33 @@ function ReviewEditForm({
                     onChange={(e) => setValues({ ...values, customerName: e.target.value })}
                     placeholder="e.g. Alif K."
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Star rating</Label>
+                  <Select
+                    value={values.rating == null ? "none" : String(values.rating)}
+                    onValueChange={(v) =>
+                      setValues({ ...values, rating: v === "none" ? null : Number(v) })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not rated</SelectItem>
+                      {[5, 4, 3, 2, 1].map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {"★".repeat(n)}
+                          {"☆".repeat(5 - n)} ({n})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Only set this if the customer actually rated their order.
+                    Rated screenshots appear as a star average on the product
+                    page and in Google results.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Source</Label>

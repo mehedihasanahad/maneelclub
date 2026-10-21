@@ -194,6 +194,7 @@ export default function AdminSettingsPage() {
               <TabsTrigger value="payment" className="max-md:flex-none max-md:flex-shrink-0 md:flex-1">Payment</TabsTrigger>
               <TabsTrigger value="announcement" className="max-md:flex-none max-md:flex-shrink-0 md:flex-1">Announcement</TabsTrigger>
               <TabsTrigger value="security" className="max-md:flex-none max-md:flex-shrink-0 md:flex-1">Security</TabsTrigger>
+              <TabsTrigger value="seo" className="max-md:flex-none max-md:flex-shrink-0 md:flex-1">SEO</TabsTrigger>
               <TabsTrigger value="tracking" className="max-md:flex-none max-md:flex-shrink-0 md:flex-1">Tracking</TabsTrigger>
             </TabsList>
           </div>
@@ -660,6 +661,119 @@ export default function AdminSettingsPage() {
         </TabsContent>
 
         {/* Tracking Settings */}
+        <TabsContent value="seo" className="mt-0 space-y-6 pt-4 md:pt-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Homepage</CardTitle>
+              <CardDescription>
+                How the homepage appears on Google and in AI answers. Leave a
+                field empty to build it from Store Name and Store Description on
+                the General tab.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="seoHomeTitle">Meta Title</Label>
+                <Input
+                  id="seoHomeTitle"
+                  placeholder={`${settings.storeName || "Maneel Club"} | ${settings.storeDescription || "Premium clothing brand in Bangladesh"}`}
+                  value={settings.seoHomeTitle || ""}
+                  onChange={(e) => handleChange("seoHomeTitle", e.target.value)}
+                  maxLength={70}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {(settings.seoHomeTitle || "").length === 0
+                    ? "Automatic: store name + description."
+                    : `${(settings.seoHomeTitle || "").length} / 60 characters`}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="seoHomeDescription">Meta Description</Label>
+                <Textarea
+                  id="seoHomeDescription"
+                  placeholder={settings.storeDescription || "Premium clothing brand in Bangladesh"}
+                  value={settings.seoHomeDescription || ""}
+                  onChange={(e) => handleChange("seoHomeDescription", e.target.value)}
+                  rows={3}
+                  maxLength={200}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {(settings.seoHomeDescription || "").length === 0
+                    ? "Automatic: the store description."
+                    : `${(settings.seoHomeDescription || "").length} / 160 characters`}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Shop Page</CardTitle>
+              <CardDescription>
+                Metadata for the /shop listing page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="seoShopTitle">Meta Title</Label>
+                <Input
+                  id="seoShopTitle"
+                  placeholder="Shop"
+                  value={settings.seoShopTitle || ""}
+                  onChange={(e) => handleChange("seoShopTitle", e.target.value)}
+                  maxLength={70}
+                />
+                <p className="text-sm text-muted-foreground">
+                  The store name is appended automatically.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="seoShopDescription">Meta Description</Label>
+                <Textarea
+                  id="seoShopDescription"
+                  placeholder={`Browse all products at ${settings.storeName || "Maneel Club"}. Premium clothing at affordable prices.`}
+                  value={settings.seoShopDescription || ""}
+                  onChange={(e) => handleChange("seoShopDescription", e.target.value)}
+                  rows={3}
+                  maxLength={200}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Keywords</CardTitle>
+              <CardDescription>
+                Comma separated. Google ignores the keywords meta tag, so this
+                has little effect on ranking - it is kept for other crawlers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="seoKeywords">Meta Keywords</Label>
+                <Input
+                  id="seoKeywords"
+                  placeholder="clothing, fashion, bangladesh, t-shirts, hoodies"
+                  value={settings.seoKeywords || ""}
+                  onChange={(e) => handleChange("seoKeywords", e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Per-page SEO</CardTitle>
+              <CardDescription>
+                Individual products and categories have their own SEO fields.
+                Edit a product or category to set its meta title, description
+                and canonical URL.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="tracking" className="mt-0 space-y-6 pt-4 md:pt-2">
           <Card>
             <CardHeader>

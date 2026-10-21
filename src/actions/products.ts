@@ -18,6 +18,9 @@ interface DbCategory {
   description?: string | null;
   image?: string | null;
   parentId?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
   isActive?: boolean;
   sortOrder?: number;
   createdAt: Date;
@@ -107,6 +110,9 @@ interface DbProduct {
   isFeatured?: boolean;
   /** Prisma returns JsonValue; we coerce to SizeChart | null in transform */
   sizeChart?: unknown;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
   variants?: DbVariant[];
@@ -195,6 +201,9 @@ function transformProduct(dbProduct: DbProduct): Product {
     isActive: dbProduct.isActive ?? true,
     isFeatured: dbProduct.isFeatured ?? false,
     sizeChart: (dbProduct.sizeChart ?? null) as Product["sizeChart"],
+    metaTitle: dbProduct.metaTitle ?? null,
+    metaDescription: dbProduct.metaDescription ?? null,
+    canonicalUrl: dbProduct.canonicalUrl ?? null,
     variants,
     colorHexMap: Object.keys(colorHexMap).length > 0 ? colorHexMap : undefined,
     createdAt: dbProduct.createdAt,
@@ -210,6 +219,9 @@ function transformCategory(dbCategory: DbCategory, shallow = false): Category {
     description: dbCategory.description || "",
     image: dbCategory.image || "/logo.png",
     parentId: dbCategory.parentId ?? null,
+    metaTitle: dbCategory.metaTitle ?? null,
+    metaDescription: dbCategory.metaDescription ?? null,
+    canonicalUrl: dbCategory.canonicalUrl ?? null,
     isActive: dbCategory.isActive ?? true,
     sortOrder: dbCategory.sortOrder ?? 0,
     createdAt: dbCategory.createdAt,

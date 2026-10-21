@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Return & Exchange Policy",
   description: "Maneel Club Return & Exchange Policy – damaged items, size exchange, and conditions.",
+  alternates: canonical("/returns"),
 };
 
 export default function ReturnsPage() {

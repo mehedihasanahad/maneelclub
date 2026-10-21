@@ -15,6 +15,8 @@ export interface Review {
   /** Not shown on the page; describes the screenshot for screen readers and search engines. */
   caption: string;
   customerName: string;
+  /** Star rating 1-5 transcribed from the customer's message; null when unrated. */
+  rating: number | null;
   source: ReviewSource;
   /** Home page carousel and product-tab fallback. */
   isFeatured: boolean;
@@ -43,6 +45,37 @@ export function reviewAltText(review: Pick<Review, "source" | "customerName" | "
  * Screenshots for a product page: ones tagged with the product first, then featured general
  * ones so the tab never looks empty. Input order (admin sort order) is preserved in each group.
  */
+/**
+ * Average rating and count for one product.
+ *
+ * `productId` is required and the review must be tagged to it. The list handed
+ * in by `pickReviewsForProduct` is padded with featured screenshots from other
+ * products, so averaging the whole list would attribute one product's ratings
+ * to every product on the site.
+ *
+ * Only rated reviews count. Returns null when none are rated, so callers emit
+ * no AggregateRating rather than a zero or an invented one.
+ */
+export function aggregateRating(
+  reviews: Pick<Review, "rating" | "productIds">[],
+  productId: string
+): { ratingValue: number; reviewCount: number } | null {
+  const rated = reviews.filter(
+    (r): r is { rating: number; productIds: string[] } =>
+      typeof r.rating === "number" &&
+      r.rating >= 1 &&
+      r.productIds.includes(productId)
+  );
+  if (rated.length === 0) return null;
+
+  const total = rated.reduce((sum, r) => sum + r.rating, 0);
+  return {
+    // One decimal place, as Google displays it.
+    ratingValue: Math.round((total / rated.length) * 10) / 10,
+    reviewCount: rated.length,
+  };
+}
+
 export function pickReviewsForProduct(all: Review[], productId: string, limit: number): Review[] {
   const tagged = all.filter((r) => r.productIds.includes(productId));
   const featured = all.filter((r) => r.isFeatured && !r.productIds.includes(productId));

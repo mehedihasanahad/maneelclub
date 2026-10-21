@@ -25,7 +25,7 @@ import {
 
 import { getProductById, updateProduct, getAdminCategories, getAdminProductsSearch, setRelatedProducts } from "@/actions/admin/products";
 import { sortSizes } from "@/lib/format";
-import { AttributeSelector, ImageUploader, VariantMatrix, SizeGuideEditor } from "@/components/admin";
+import { AttributeSelector, ImageUploader, VariantMatrix, SizeGuideEditor, SeoFields } from "@/components/admin";
 import type { SizeChartValue } from "@/components/admin/size-guide-editor";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +41,10 @@ const productSchema = z.object({
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   productType: z.enum(["SIMPLE", "VARIABLE"]).default("SIMPLE"),
+  // SEO overrides - all optional, blank means "use the automatic value".
+  metaTitle: z.string().max(70, "Keep it under 70 characters").optional(),
+  metaDescription: z.string().max(200, "Keep it under 200 characters").optional(),
+  canonicalUrl: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -108,6 +112,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       isActive: true,
       isFeatured: false,
       productType: "SIMPLE",
+      metaTitle: "",
+      metaDescription: "",
+      canonicalUrl: "",
     },
   });
 
@@ -154,6 +161,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           isActive: product.isActive,
           isFeatured: product.isFeatured,
           productType: productTypeFromDb,
+          // Empty string, not null, so the inputs stay controlled.
+          metaTitle: product.metaTitle ?? "",
+          metaDescription: product.metaDescription ?? "",
+          canonicalUrl: product.canonicalUrl ?? "",
         });
         
         setImages(product.images?.length ? product.images : []);
@@ -666,6 +677,21 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </Card>
 
               <SizeGuideEditor value={sizeChart} onChange={setSizeChart} />
+
+              <SeoFields
+                control={form.control}
+                names={{
+                  metaTitle: "metaTitle",
+                  metaDescription: "metaDescription",
+                  canonicalUrl: "canonicalUrl",
+                }}
+                autoTitle={form.watch("title") || "Product title"}
+                autoDescription={
+                  form.watch("description") ||
+                  `Buy ${form.watch("title") || "this product"} at Maneel Club`
+                }
+                canonicalExample={`https://maneelclub.com/product/${form.watch("slug") || "product-slug"}`}
+              />
             </div>
 
             {/* Sidebar */}

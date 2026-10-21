@@ -37,6 +37,45 @@ export async function getSetting(key: string): Promise<string> {
   return settings[key] ?? DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS] ?? "";
 }
 
+/**
+ * Site-level SEO, resolved once from Settings with the build-time constants as
+ * the fallback.
+ *
+ * `siteConfig` stays the fallback rather than the source of truth because it is
+ * imported by client components, which cannot read the database. Anything
+ * rendered on the server (metadata, structured data) should prefer these.
+ */
+export async function getSeoSettings(): Promise<{
+  storeName: string;
+  storeDescription: string;
+  homeTitle: string;
+  homeDescription: string;
+  shopTitle: string;
+  shopDescription: string;
+  keywords: string[];
+}> {
+  const settings = await getSettings();
+
+  const storeName = settings.storeName?.trim() || siteConfig.name;
+  const storeDescription =
+    settings.storeDescription?.trim() || siteConfig.description;
+
+  return {
+    storeName,
+    storeDescription,
+    homeTitle: settings.seoHomeTitle?.trim() || `${storeName} | ${storeDescription}`,
+    homeDescription: settings.seoHomeDescription?.trim() || storeDescription,
+    shopTitle: settings.seoShopTitle?.trim() || "Shop",
+    shopDescription:
+      settings.seoShopDescription?.trim() ||
+      `Browse all products at ${storeName}. Premium clothing at affordable prices.`,
+    keywords: (settings.seoKeywords || "")
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean),
+  };
+}
+
 // Shipping rates helper
 export async function getShippingRates(): Promise<{ dhaka: number; outside: number }> {
   const settings = await getSettings();

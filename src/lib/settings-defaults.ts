@@ -52,6 +52,14 @@ export const DEFAULT_SETTINGS = {
   storeDescription: "Premium clothing brand in Bangladesh",
   storeEmail: "support@maneelclub.com",
   storePhone: "+8801997193518",
+
+  // SEO. Blank values fall back to the store name/description above, so the
+  // storefront always has something sensible without the admin filling these in.
+  seoHomeTitle: "",
+  seoHomeDescription: "",
+  seoShopTitle: "",
+  seoShopDescription: "",
+  seoKeywords: "",
   
   // Social Links
   facebookUrl: "https://www.facebook.com/maneelclub",

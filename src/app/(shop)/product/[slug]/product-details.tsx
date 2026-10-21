@@ -15,7 +15,8 @@ import {
   AddToCartButton,
 } from "@/components/product";
 import { TrustLine } from "@/components/reviews/trust-line";
-import type { Review, SocialProofSettings } from "@/lib/reviews-shared";
+import { aggregateRating, type Review, type SocialProofSettings } from "@/lib/reviews-shared";
+import { RatingSummary } from "@/components/reviews/rating-summary";
 import { formatPrice, calculateDiscount, sortSizes } from "@/lib/format";
 import { UNLIMITED_STOCK } from "@/lib/constants";
 
@@ -72,6 +73,11 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product, reviews, socialProof }: ProductDetailsProps) {
+  // Star average across the reviews tagged to this product; null when unrated.
+  // Scoped by product id because `reviews` is padded with featured screenshots
+  // from other products.
+  const rating = aggregateRating(reviews, product.id);
+
   useEffect(() => {
     const value = product.salePrice ?? product.regularPrice;
     trackViewContent({
@@ -298,6 +304,19 @@ export function ProductDetails({ product, reviews, socialProof }: ProductDetails
             {/* Title */}
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">{product.title}</h1>
+              {/*
+                Shown whenever any tagged review carries a rating. The product's
+                AggregateRating markup is built from the same helper, so the
+                markup never claims a rating the page does not display.
+              */}
+              {rating && (
+                <div className="mt-2">
+                  <RatingSummary
+                    ratingValue={rating.ratingValue}
+                    reviewCount={rating.reviewCount}
+                  />
+                </div>
+              )}
               {product.category && (
                 <Link 
                   href={`/product-category/${product.category.slug}`}

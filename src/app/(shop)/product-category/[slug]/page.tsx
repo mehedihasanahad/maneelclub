@@ -7,6 +7,8 @@ import { siteConfig } from "@/lib/constants";
 import { ProductGrid } from "@/components/product";
 import { CategoryHeader } from "./category-header";
 import { ProductSort } from "./product-sort";
+import { absoluteUrl, breadcrumbJsonLd, canonical, itemListJsonLd, ogImages } from "@/lib/seo";
+import { JsonLd } from "@/components/seo";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -30,10 +32,29 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
   
   const title = slug === "all" ? "All Products" : category?.name || "Products";
-  
+  // Admin-set SEO overrides win; otherwise fall back to name/description.
+  const description =
+    category?.metaDescription ||
+    category?.description ||
+    `Shop ${title} at ${siteConfig.name}`;
+  const metaTitle = category?.metaTitle || title;
+
   return {
-    title,
-    description: category?.description || `Shop ${title} at ${siteConfig.name}`,
+    // `absolute` when the admin set a meta title, so their wording is used
+    // verbatim rather than having the brand suffix appended to it.
+    title: category?.metaTitle ? { absolute: category.metaTitle } : title,
+    description,
+    // Sorting is a query param; every ?sort= variant folds back to this URL.
+    alternates: category?.canonicalUrl
+      ? { canonical: category.canonicalUrl }
+      : canonical(`/product-category/${slug}`),
+    openGraph: {
+      type: "website",
+      title: `${metaTitle} | ${siteConfig.name}`,
+      description,
+      url: absoluteUrl(`/product-category/${slug}`),
+      images: ogImages(),
+    },
   };
 }
 
@@ -48,6 +69,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     
     return (
       <div className="container py-8">
+        <JsonLd
+          data={[
+            breadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "All Products", path: "/product-category/all" },
+            ]),
+            itemListJsonLd(
+              products.map((p) => ({ title: p.title, slug: p.slug })),
+              `All Products | ${siteConfig.name}`
+            ),
+          ]}
+        />
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">Home</Link>
@@ -92,6 +125,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   
   return (
     <div className="container py-8">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: category.name, path: `/product-category/${slug}` },
+          ]),
+          itemListJsonLd(
+            products.map((p) => ({ title: p.title, slug: p.slug })),
+            `${category.name} | ${siteConfig.name}`
+          ),
+        ]}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-primary">Home</Link>

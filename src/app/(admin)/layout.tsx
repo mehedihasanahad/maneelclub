@@ -28,6 +28,12 @@ import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/lib/constants";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import type { Metadata } from "next";
+
+// Admin area: noindex covers every /admin/* page below it.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 interface SidebarLinkItem {
   name: string;

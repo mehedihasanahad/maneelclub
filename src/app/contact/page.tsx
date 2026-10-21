@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { siteConfig } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Contact Us",
   description: `Contact ${siteConfig.name} – get in touch for orders, support, or inquiries.`,
+  alternates: canonical("/contact"),
 };
 
 export default function ContactPage() {

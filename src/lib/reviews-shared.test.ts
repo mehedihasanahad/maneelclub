@@ -5,6 +5,7 @@ import {
   fillSocialProofText,
   pickReviewsForProduct,
   reviewAltText,
+  aggregateRating,
   type Review,
 } from "./reviews-shared";
 
@@ -16,6 +17,7 @@ function review(id: string, overrides: Partial<Review> = {}): Review {
     height: 1600,
     caption: "",
     customerName: "",
+    rating: null,
     source: "MESSENGER",
     isFeatured: false,
     productIds: [],
@@ -114,5 +116,60 @@ describe("reviewAltText", () => {
 
   it("falls back to a generic description when name and caption are empty", () => {
     assert.equal(reviewAltText(review("x", { source: "PHOTO" })), "Customer photo from a customer");
+  });
+});
+
+describe("aggregateRating", () => {
+  it("returns null when nothing is rated, so no markup is emitted", () => {
+    assert.equal(aggregateRating([], "p1"), null);
+    assert.equal(
+      aggregateRating([review("a", { productIds: ["p1"] }), review("b", { productIds: ["p1"] })], "p1"),
+      null
+    );
+  });
+
+  it("averages only the rated reviews tagged to the product", () => {
+    const result = aggregateRating(
+      [
+        review("a", { rating: 5, productIds: ["p1"] }),
+        review("b", { rating: 4, productIds: ["p1"] }),
+        review("c", { productIds: ["p1"] }), // unrated - excluded
+      ],
+      "p1"
+    );
+    assert.deepEqual(result, { ratingValue: 4.5, reviewCount: 2 });
+  });
+
+  it("ignores ratings from other products", () => {
+    // pickReviewsForProduct pads the list with featured screenshots from other
+    // products; those must never count towards this product's average.
+    const result = aggregateRating(
+      [
+        review("own", { rating: 3, productIds: ["p1"] }),
+        review("other", { rating: 5, productIds: ["p2"], isFeatured: true }),
+        review("general", { rating: 5, productIds: [], isFeatured: true }),
+      ],
+      "p1"
+    );
+    assert.deepEqual(result, { ratingValue: 3, reviewCount: 1 });
+  });
+
+  it("returns null when only other products' reviews are rated", () => {
+    assert.equal(
+      aggregateRating([review("other", { rating: 5, productIds: ["p2"] })], "p1"),
+      null
+    );
+  });
+
+  it("rounds to one decimal place", () => {
+    const result = aggregateRating(
+      [
+        review("a", { rating: 5, productIds: ["p1"] }),
+        review("b", { rating: 4, productIds: ["p1"] }),
+        review("c", { rating: 4, productIds: ["p1"] }),
+      ],
+      "p1"
+    );
+    assert.deepEqual(result, { ratingValue: 4.3, reviewCount: 3 });
   });
 });

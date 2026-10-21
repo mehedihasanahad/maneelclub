@@ -7,6 +7,13 @@ import { siteConfig, PAYMENT_METHODS } from "@/lib/constants";
 import { getOrderByNumber } from "@/actions/orders";
 import { getOrderPromotion } from "@/lib/promotions";
 import { PurchaseEventTracker } from "@/components/analytics";
+import type { Metadata } from "next";
+
+// Shows a customer's order number and details: never index, never follow.
+export const metadata: Metadata = {
+  title: "Order Confirmation",
+  robots: { index: false, follow: false },
+};
 
 interface OrderConfirmationPageProps {
   searchParams: Promise<{ order?: string }>;

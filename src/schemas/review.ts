@@ -24,10 +24,17 @@ export const createReviewSchema = z.object({
 
 export const createReviewsSchema = z.array(createReviewSchema).min(1).max(100);
 
+/**
+ * Star rating transcribed from the customer's message. Nullable so an admin can
+ * clear it again, which removes the review from the product's average.
+ */
+const rating = z.number().int().min(1, "Rating must be 1-5").max(5, "Rating must be 1-5").nullable();
+
 export const updateReviewSchema = z
   .object({
     caption: z.string().trim().max(300),
     customerName: z.string().trim().max(80),
+    rating,
     source: reviewSourceSchema,
     isFeatured: z.boolean(),
     isActive: z.boolean(),

@@ -18,6 +18,24 @@ const sizeChartSchema = z.object({
   ),
 });
 
+/** Optional free-text SEO field: trimmed and length-capped. */
+function seoText(max: number) {
+  return z
+    .string()
+    .trim()
+    .max(max, `Must be ${max} characters or fewer`)
+    .optional()
+    .nullable();
+}
+
+/**
+ * Blank SEO field -> NULL, so "cleared by the admin" and "never set" behave the
+ * same and the storefront falls back to the automatic value.
+ */
+function nz(value: string | null | undefined): string | null {
+  return value && value.trim() ? value.trim() : null;
+}
+
 // Schema for product creation/update (WooCommerce-style: Simple vs Variable)
 const productSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -36,6 +54,22 @@ const productSchema = z.object({
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   sizeChart: sizeChartSchema.optional().nullable(),
+
+  // SEO overrides. An empty field means "use the automatic value", so blanks
+  // are stored as NULL rather than as an empty string.
+  metaTitle: seoText(70),
+  metaDescription: seoText(200),
+  canonicalUrl: z
+    .union([
+      z.literal(""),
+      z
+        .string()
+        .trim()
+        .max(500)
+        .url("Canonical URL must be a full URL, e.g. https://maneelclub.com/product/x"),
+    ])
+    .optional()
+    .nullable(),
 });
 
 const variantSchema = z.object({
@@ -313,6 +347,9 @@ export async function createProduct(input: ProductInput, variants?: VariantRecor
           trackInventory,
           isActive: validated.isActive,
           isFeatured: validated.isFeatured,
+          metaTitle: nz(validated.metaTitle),
+          metaDescription: nz(validated.metaDescription),
+          canonicalUrl: nz(validated.canonicalUrl),
           ...(validated.sizeChart &&
             validated.sizeChart.headers.length > 0 &&
             validated.sizeChart.rows.length > 0 && {
@@ -475,6 +512,9 @@ export async function updateProduct(id: string, input: Partial<ProductInput>, va
             : input.categoryId !== undefined
               ? { categoryId: input.categoryId }
               : {}),
+          ...(input.metaTitle !== undefined && { metaTitle: nz(input.metaTitle) }),
+          ...(input.metaDescription !== undefined && { metaDescription: nz(input.metaDescription) }),
+          ...(input.canonicalUrl !== undefined && { canonicalUrl: nz(input.canonicalUrl) }),
           ...(input.images && { images: input.images }),
           ...(input.colors && { colors: input.colors }),
           ...(input.sizes && { sizes: input.sizes }),
@@ -728,7 +768,9 @@ export async function createCategory(
   slug: string,
   description?: string,
   parentId?: string | null,
-  image?: string | null
+  image?: string | null,
+  // Optional trailing argument so existing callers keep working unchanged.
+  seo?: { metaTitle?: string | null; metaDescription?: string | null; canonicalUrl?: string | null }
 ) {
   try {
     await checkAdmin();
@@ -769,6 +811,9 @@ export async function createCategory(
         description,
         parentId: parentId || null,
         ...(image != null && image !== "" && { image }),
+        metaTitle: nz(seo?.metaTitle),
+        metaDescription: nz(seo?.metaDescription),
+        canonicalUrl: nz(seo?.canonicalUrl),
       },
     });
 
@@ -796,6 +841,9 @@ export async function updateCategory(
     description?: string;
     parentId?: string | null;
     image?: string | null;
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    canonicalUrl?: string | null;
   }
 ) {
   try {
@@ -851,6 +899,9 @@ export async function updateCategory(
         ...(data.name !== undefined && { name: data.name }),
         ...(data.slug !== undefined && { slug: data.slug }),
         ...(data.description !== undefined && { description: data.description }),
+        ...(data.metaTitle !== undefined && { metaTitle: nz(data.metaTitle) }),
+        ...(data.metaDescription !== undefined && { metaDescription: nz(data.metaDescription) }),
+        ...(data.canonicalUrl !== undefined && { canonicalUrl: nz(data.canonicalUrl) }),
         ...(data.parentId !== undefined && { parentId: data.parentId }),
         ...(data.image !== undefined && { image: data.image || null }),
       },

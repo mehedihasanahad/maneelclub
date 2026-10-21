@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/constants";
 import { SHIPPING_RATES } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Shipping Info",
   description: `Shipping information and delivery for ${siteConfig.name}.`,
+  alternates: canonical("/shipping"),
 };
 
 export default function ShippingPage() {

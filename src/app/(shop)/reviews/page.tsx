@@ -3,13 +3,24 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { siteConfig } from "@/lib/constants";
 import { getActiveReviews, getSocialProofSettings } from "@/lib/reviews";
+import { absoluteUrl, breadcrumbJsonLd, canonical, ogImages } from "@/lib/seo";
+import { JsonLd } from "@/components/seo";
 import { ReviewsGrid } from "@/components/reviews";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { customerCount } = await getSocialProofSettings();
   return {
-    title: `Customer Reviews | ${siteConfig.name}`,
+    // Bare title: the root layout's `%s | Maneel Club` template adds the suffix.
+    title: "Customer Reviews",
     description: `Screenshots of real messages from ${siteConfig.name} customers after their parcel arrived. Over ${customerCount} customers across Bangladesh.`,
+    alternates: canonical("/reviews"),
+    openGraph: {
+      title: `Customer Reviews | ${siteConfig.name}`,
+      description: `Screenshots of real messages from ${siteConfig.name} customers after their parcel arrived.`,
+      url: absoluteUrl("/reviews"),
+      images: ogImages(),
+      type: "website",
+    },
   };
 }
 
@@ -18,6 +29,12 @@ export default async function ReviewsPage() {
 
   return (
     <div className="container py-8 md:py-12">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Reviews", path: "/reviews" },
+        ])}
+      />
       <nav className="mb-6 flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary">Home</Link>
         <ChevronRight className="h-4 w-4" />

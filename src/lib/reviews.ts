@@ -27,6 +27,7 @@ export const getActiveReviews = cache(async (): Promise<Review[]> => {
         height: true,
         caption: true,
         customerName: true,
+        rating: true,
         source: true,
         isFeatured: true,
         products: { select: { productId: true } },

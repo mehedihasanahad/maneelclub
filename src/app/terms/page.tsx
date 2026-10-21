@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Maneel Club Terms of Service – terms and conditions for using our website and services.",
+  alternates: canonical("/terms"),
 };
 
 export default function TermsPage() {

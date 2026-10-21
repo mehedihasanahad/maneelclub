@@ -60,6 +60,9 @@ interface Category {
   description: string | null;
   image: string | null;
   parentId: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  canonicalUrl: string | null;
   parent?: { id: string; name: string; slug: string } | null;
   children?: Category[];
   _count?: { products: number };
@@ -80,6 +83,10 @@ export default function AdminCategoriesPage() {
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<string>("");
   const [parentId, setParentId] = useState<string | null>(null);
+  // SEO overrides - blank means the storefront uses name/description.
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
 
   useEffect(() => {
     loadCategories();
@@ -120,7 +127,12 @@ export default function AdminCategoriesPage() {
         categorySlug,
         description.trim() || undefined,
         parentId || undefined,
-        image.trim() || undefined
+        image.trim() || undefined,
+        {
+          metaTitle: metaTitle.trim() || null,
+          metaDescription: metaDescription.trim() || null,
+          canonicalUrl: canonicalUrl.trim() || null,
+        }
       );
 
       if (result.success) {
@@ -150,6 +162,9 @@ export default function AdminCategoriesPage() {
         description: description.trim() || undefined,
         parentId: parentId || null,
         image: image.trim() || null,
+        metaTitle: metaTitle.trim() || null,
+        metaDescription: metaDescription.trim() || null,
+        canonicalUrl: canonicalUrl.trim() || null,
       });
 
       if (result.success) {
@@ -193,6 +208,9 @@ export default function AdminCategoriesPage() {
     setDescription("");
     setImage("");
     setParentId(null);
+    setMetaTitle("");
+    setMetaDescription("");
+    setCanonicalUrl("");
   }
 
   function openNewDialog() {
@@ -207,6 +225,9 @@ export default function AdminCategoriesPage() {
     setDescription(category.description || "");
     setImage(category.image || "");
     setParentId(category.parentId || null);
+    setMetaTitle(category.metaTitle || "");
+    setMetaDescription(category.metaDescription || "");
+    setCanonicalUrl(category.canonicalUrl || "");
     setEditCategoryId(category.id);
     setDialogOpen(true);
   }
@@ -461,6 +482,60 @@ export default function AdminCategoriesPage() {
                 onChange={(urls) => setImage(urls[0] ?? "")}
                 maxImages={1}
               />
+            </div>
+
+            {/* SEO - every field optional; blank falls back to name/description. */}
+            <div className="space-y-4 border-t pt-4">
+              <div>
+                <h4 className="font-medium">SEO</h4>
+                <p className="text-sm text-muted-foreground">
+                  How this category appears on Google and in AI answers. Leave
+                  empty to use the automatic value.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="metaTitle">Meta Title</Label>
+                <Input
+                  id="metaTitle"
+                  placeholder={name || "Category name"}
+                  value={metaTitle}
+                  onChange={(e) => setMetaTitle(e.target.value)}
+                  maxLength={70}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {metaTitle.length === 0
+                    ? "Automatic: the category name."
+                    : `${metaTitle.length} / 60 characters`}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="metaDescription">Meta Description</Label>
+                <Textarea
+                  id="metaDescription"
+                  placeholder={description || `Shop ${name || "this category"} at Maneel Club`}
+                  value={metaDescription}
+                  onChange={(e) => setMetaDescription(e.target.value)}
+                  rows={3}
+                  maxLength={200}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {metaDescription.length === 0
+                    ? "Automatic: the description above."
+                    : `${metaDescription.length} / 160 characters`}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="canonicalUrl">Canonical URL</Label>
+                <Input
+                  id="canonicalUrl"
+                  placeholder={`https://maneelclub.com/product-category/${slug || "category-slug"}`}
+                  value={canonicalUrl}
+                  onChange={(e) => setCanonicalUrl(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Leave empty unless this category duplicates another one.
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter>

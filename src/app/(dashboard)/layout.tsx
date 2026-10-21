@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
@@ -18,6 +19,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
+
+// Private account area: noindex covers every /dashboard/* page below it.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 const sidebarLinks = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

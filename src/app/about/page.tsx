@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "About Us",
   description: "About Maneel Club – our story, values, and commitment to quality fashion in Bangladesh.",
+  alternates: canonical("/about"),
 };
 
 export default function AboutPage() {

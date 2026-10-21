@@ -3,8 +3,14 @@
 import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
 
-// Load from .env.local for local development
+// .env.local first (local development), then .env (the VPS uses .env). dotenv
+// does not overwrite variables that are already set, so .env.local keeps
+// precedence locally and a real environment variable beats both. Without the
+// .env fallback the Prisma CLI finds no DATABASE_URL on the server and
+// `migrate deploy` fails, even though the running app reads .env fine.
+// Mirrors what prisma/seed.ts already does.
 config({ path: ".env.local" });
+config();
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

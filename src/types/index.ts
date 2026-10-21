@@ -14,6 +14,10 @@ export interface Product {
   trackInventory?: boolean;
   /** WooCommerce-style: SIMPLE (single price/stock) or VARIABLE (variants) */
   productType?: "SIMPLE" | "VARIABLE";
+  /** Admin SEO overrides; null/empty means the storefront derives the value. */
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
   isFeatured: boolean;
   isActive: boolean;
   sizeChart: SizeChart | null;
@@ -52,6 +56,10 @@ export interface Category {
   description: string | null;
   image: string | null;
   parentId: string | null;
+  /** Admin SEO overrides; null/empty means the storefront derives the value. */
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  canonicalUrl?: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;

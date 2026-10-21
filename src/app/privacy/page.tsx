@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/constants";
+import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Maneel Club Privacy Policy – how we collect, use, and protect your information.",
+  alternates: canonical("/privacy"),
 };
 
 export default function PrivacyPage() {

@@ -13,7 +13,18 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin/", "/dashboard/", "/sign-in", "/sign-up"],
+      disallow: [
+        "/api/",
+        "/admin/",
+        "/dashboard/",
+        "/sign-in",
+        "/sign-up",
+        // Transactional pages - nothing here is useful in search results and
+        // /order-confirmation carries a customer's order number.
+        "/cart",
+        "/checkout",
+        "/order-confirmation",
+      ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,

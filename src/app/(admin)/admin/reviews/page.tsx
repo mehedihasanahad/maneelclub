@@ -202,6 +202,7 @@ export default function AdminReviewsPage() {
     const res = await updateReview(editing.id, {
       customerName: values.customerName,
       caption: values.caption,
+      rating: values.rating,
       source: values.source,
       productIds: values.products.map((p) => p.id),
     });
@@ -210,7 +211,7 @@ export default function AdminReviewsPage() {
       setReviews((prev) =>
         prev.map((r) =>
           r.id === editing.id
-            ? { ...r, customerName: values.customerName.trim(), caption: values.caption.trim(), source: values.source, products: values.products }
+            ? { ...r, customerName: values.customerName.trim(), caption: values.caption.trim(), rating: values.rating, source: values.source, products: values.products }
             : r
         )
       );

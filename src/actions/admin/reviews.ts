@@ -45,6 +45,7 @@ export type AdminReview = {
   height: number;
   caption: string;
   customerName: string;
+  rating: number | null;
   source: ReviewSource;
   isFeatured: boolean;
   isActive: boolean;
@@ -68,6 +69,7 @@ export async function getAdminReviews(): Promise<Result<AdminReview[]>> {
         height: r.height,
         caption: r.caption,
         customerName: r.customerName,
+        rating: r.rating,
         source: r.source,
         isFeatured: r.isFeatured,
         isActive: r.isActive,

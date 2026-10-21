@@ -10,8 +10,28 @@ import { SocialProofSection } from "@/components/reviews";
 import { siteConfig } from "@/lib/constants";
 import { getFeaturedProducts, getNewArrivals, getFeaturedCategories } from "@/actions/products";
 import { getHeroSlides } from "@/actions/hero-slides";
-import { getFreeShippingMinimum } from "@/lib/settings";
+import { getFreeShippingMinimum, getSeoSettings } from "@/lib/settings";
 import { formatPrice } from "@/lib/format";
+import { absoluteUrl, canonical, ogImages } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoSettings();
+
+  return {
+    // `absolute` so the root template does not append the brand name twice.
+    title: { absolute: seo.homeTitle },
+    description: seo.homeDescription,
+    alternates: canonical("/"),
+    openGraph: {
+      type: "website",
+      title: seo.homeTitle,
+      description: seo.homeDescription,
+      url: absoluteUrl("/"),
+      images: ogImages(),
+    },
+  };
+}
 
 async function HeroSection() {
   const { data: slides } = await getHeroSlides();
@@ -130,6 +150,15 @@ async function PromoBannerSection() {
 export default function HomePage() {
   return (
     <>
+      {/*
+        The hero is an image carousel with no text, so the page would otherwise
+        have no h1. Visually hidden keeps the design unchanged while giving the
+        document a single top-level heading.
+      */}
+      <h1 className="sr-only">
+        {siteConfig.name} - {siteConfig.description}
+      </h1>
+
       {/* Hero Section */}
       <Suspense fallback={<div className="w-full aspect-[2.2/1] sm:aspect-[2.7/1] lg:aspect-[3.2/1] bg-muted animate-pulse" />}>
         <HeroSection />
